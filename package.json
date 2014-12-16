@@ -1,0 +1,13 @@
+{
+  "name": "vi-spdat-reporter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "reporter.js",
+  "dependencies": {
+    "babyparse": "^0.2.1",
+    "request": "^2.49.0"
+  },
+  "devDependencies": {},
+  "author": "Keith Donald",
+  "license": "MIT"
+}
