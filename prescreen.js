@@ -16,14 +16,14 @@ clientPrototype.twoParentFamily = function() {
   return this.data.hohFirstName && this.data.hoh2FirstName;
 }
 clientPrototype.hohPregnant = function() {
-  return this.data.fCSizeOfFamilyFemaleHohPregnant;
+  return this.data.fSizeOfFamilyFemaleHohPregnant;
 }
 clientPrototype.childCount = function() {
   return this.data.fSizeOfFamilyChildrenCurrentlyWith +
     this.data.fSizeOfFamilyChildrenExpectedToJoin;
 }
 clientPrototype.anyChildOfOrYounger = function(age) {
-  return this.data.fCSizeOfFamilyYoungestChildAge <= age;
+  return this.data.fSizeOfFamilyYoungestChildAge <= age;
 }
 
 clientPrototype.init = function(data) {
@@ -61,54 +61,131 @@ clientPrototype.init = function(data) {
     this.issuesPresent.familyUnit.sizeOfFamily = false;
     this.issuesPresent.familyUnit.interactionsWithDCF = false;
   }
+
+  this.strengths = {};
+  this.strengths.wellness = {};
+  this.strengths.wellness.physicalHealth = [];
+  this.strengths.wellness.mentalHealth = [];
+  this.strengths.wellness.medication = [];
+  this.strengths.wellness.substanceUse = [];
+  this.strengths.wellness.abuseOrTrauma = [];
+  this.strengths.risks = {};
+  this.strengths.risks.interactionsWithEmergencyServices = [];
+  this.strengths.risks.involvementInHighRiskSituations = [];
+  this.strengths.risks.managingTenancy = [];
+  this.strengths.risks.harm = [];
+  this.strengths.risks.legalIssues = [];
+  this.strengths.socialization = {};
+  this.strengths.socialization.selfCare = [];
+  this.strengths.socialization.relationships = [];
+  this.strengths.socialization.meaningfulActivities = [];
+  this.strengths.socialization.moneyManagement = [];
+
+  this.strengths.historyOfHousingAndHomelessness = {};
+  this.strengths.historyOfHousingAndHomelessness.historyOfHousingAndHomelessness = [];
+
+  this.strengths.familyUnit = {};
+  if (this.family()) {
+    this.strengths.familyUnit.parentalEngagement = [];
+    this.strengths.familyUnit.stability = [];
+    this.strengths.familyUnit.needsOfChildren = [];
+    this.strengths.familyUnit.sizeOfFamily = [];
+    this.strengths.familyUnit.interactionsWithDCF = [];
+  }
+
+  this.issues = {};
+  this.issues.wellness = {};
+  this.issues.wellness.physicalHealth = [];
+  this.issues.wellness.physicalHealth.medical = [];
+  this.issues.wellness.physicalHealth.otherMedical = [];
+  this.issues.wellness.mentalHealth = [];
+  this.issues.wellness.medication = [];
+  this.issues.wellness.substanceUse = [];
+  this.issues.wellness.abuseOrTrauma = [];
+  this.issues.risks = {};
+  this.issues.risks.interactionsWithEmergencyServices = [];
+  this.issues.risks.involvementInHighRiskSituations = [];
+  this.issues.risks.managingTenancy = [];
+  this.issues.risks.harm = [];
+  this.issues.risks.legalIssues = [];
+  this.issues.socialization = {};
+  this.issues.socialization.selfCare = [];
+  this.issues.socialization.relationships = [];
+  this.issues.socialization.meaningfulActivities = [];
+  this.issues.socialization.moneyManagement = [];
+
+  this.issues.historyOfHousingAndHomelessness = {};
+  this.issues.historyOfHousingAndHomelessness.historyOfHousingAndHomelessness = [];
+
+  this.issues.familyUnit = {};
+  if (this.family()) {
+    this.issues.familyUnit.parentalEngagement = [];
+    this.issues.familyUnit.stability = [];
+    this.issues.familyUnit.needsOfChildren = [];
+    this.issues.familyUnit.sizeOfFamily = [];
+    this.issues.familyUnit.interactionsWithDCF = [];
+  }
+
 }
 
-clientPrototype.scoreYes = function(x, domain, component, dimension, forEach) {
-  if (!forEach) {
-    if (dimension) {
-        if (this.issuesPresent[domain][dimension]) {
-          return;
+clientPrototype.scoreYesOrNo = function(yesOrNo, value, domain, component, strength, issue, dimension, set, forEach, trackOnly) {
+  console.log(this.data.id, "scoring yes/no", yesOrNo, domain, component);
+  if (typeof value === 'string') {
+    value = [ value ];
+  }
+  var populated = false;
+  for (var i = 0; i < value.length; i++) {
+    var e = value[i];
+    if (e != "" && e !== "refused") {
+      e = parseInt(e);
+      console.log("Answered", e, domain, component);
+      if (e === yesOrNo) {
+        if (!trackOnly) {
+          if (dimension && forEach) {
+            console.log("increment score", domain, "on dimension", dimension);
+            this.scoring[domain]++;
+          } else {
+            if (!this.issuesPresent[domain][component]) {
+              console.log("increment score", domain);
+              this.scoring[domain]++;;
+            }
+          }
         }
-    } else {
-      if (this.issuesPresent[domain][component]) {
-        return;
-      }
-    }
-  }
-  if (x && x !== "refused") {
-    x = parseInt(x);
-    if (x === 1) {
-      this.scoring[domain]++;
-      this.issuesPresent[domain][component] = true;
-      if (dimension) {
-        console.log(this.data.id, "Yes, Scoring", domain, component, dimension);
-        this.issuesPresent[domain][dimension] = true;
+        this.issuesPresent[domain][component] = true;
+        if (!populated && issue) {
+          console.log("recorded issue '" + issue + "'");
+          this.issues[domain][component].push(issue);
+          populated = true;
+        }
+        if (dimension) {
+          this.issuesPresent[domain][dimension] = true;
+          if (set) {
+            console.log("recorded issue dimension '" + set[i] + "'");
+            this.issues[domain][component][dimension].push(set[i]);
+          }
+        }
       } else {
-        console.log(this.data.id, "Yes, Scoring ", domain, component);
+        if (!populated && strength) {
+          console.log("recorded strength '" + strength + "'");
+          this.strengths[domain][component].push(strength);
+          populated = true;
+        }
       }
     }
   }
 }
 
-clientPrototype.scoreNo = function(x, domain, component) {
-  if (this.issuesPresent[domain][component]) {
-    return;
-  }
-  if (x && x !== "refused") {
-    x = parseInt(x);
-    if (x === 0) {
-      console.log(this.data.id, "No, Scoring ", domain, component);
-      this.scoring[domain]++;
-      this.issuesPresent[domain][component] = true;
-    }
-  }
+clientPrototype.scoreYes = function(value, domain, component, strength, issue, dimension, set, forEach, trackOnly) {
+  this.scoreYesOrNo(1, value, domain, component, strength, issue, dimension, set, forEach, trackOnly)
 }
 
-clientPrototype.scoreTotalGte = function(value, x, domain, component) {
-  if (this.issuesPresent[domain][component]) {
-    return;
-  }
-  if (typeof value === 'string' ) {
+clientPrototype.scoreNo = function(value, domain, component, strength, issue) {
+  this.scoreYesOrNo(0, value, domain, component, strength, issue)
+}
+
+clientPrototype.scoreTotalGte = function(value, x, domain, component, strength, issue) {
+  console.log(this.data.id, "scoring >= " + x, domain, component);
+  if (typeof value === 'string') {
     value = [ value ];
   }
   var total = 0;
@@ -119,34 +196,68 @@ clientPrototype.scoreTotalGte = function(value, x, domain, component) {
     }
   }
   if (total >= x) {
-    console.log(this.data.id, ">= " + x + ", Scoring ", domain, component);
-    this.scoring[domain]++;
-    this.issuesPresent[domain][component] = true;
-  }
-}
-
-clientPrototype.scoreValueEq = function(value, x, domain, component) {
-  if (this.issuesPresent[domain][component]) {
-    return;
-  }
-  if (x && x !== "refused") {
-    if (x === value) {
-      console.log(this.data.id, "== " + x + ", Scoring ", domain, component);
+    if (!this.issuesPresent[domain][component]) {
+      console.log("increment score", domain);
       this.scoring[domain]++;
-      this.issuesPresent[domain][component] = true;
+    }
+    this.issuesPresent[domain][component] = true;
+    this.issues[domain][component].componentValue = value;
+    if (issue) {
+      console.log("recorded issue '" + issue + "'");
+      this.issues[domain][component].push(issue);
+    }
+  } else {
+    if (strength) {
+      console.log("recorded strength '" + strength + "'");
+      this.strengths[domain][component].push(strength);
     }
   }
 }
 
-clientPrototype.scoreValueOtherThan = function(value, x, domain, component) {
-  if (this.issuesPresent[domain][component]) {
-    return;
-  }
-  if (x && x !== "refused") {
-    if (x !== value) {
-      console.log(this.data.id, "!= " + x + ", Scoring ", domain, component);
-      this.scoring[domain]++;
+clientPrototype.scoreValueEq = function(value, x, domain, component, strength, issue) {
+  console.log(this.data.id, "scoring == " + x, domain, component);
+  if (value && value !== "refused") {
+    if (x === value) {
+      console.log(this.data.id, "== " + x + ", scoring", domain, component);
+      if (!this.issuesPresent[domain][component]) {
+        console.log("Increment score", domain);
+        this.scoring[domain]++;
+      }
       this.issuesPresent[domain][component] = true;
+      this.issues[domain][component].componentValue = value;
+      if (issue) {
+        console.log("recorded issue '" + issue + "'");
+        this.issues[domain][component].push(issue);
+      }
+    } else {
+      if (strength) {
+        console.log("recorded strength '" + strength + "'");
+        this.strengths[domain][component].push(strength);
+      }
+    }
+  }
+}
+
+clientPrototype.scoreValueOtherThan = function(value, x, domain, component, strength, issue) {
+  console.log(this.data.id, "scoring <> " + x, domain, component);
+  if (value && value !== "refused") {
+    if (x !== value) {
+      console.log(this.data.id, "!= " + x + ", scoring", domain, component);
+      if (!this.issuesPresent[domain][component]) {
+        console.log("increment score", domain);
+        this.scoring[domain]++;
+      }
+      this.issuesPresent[domain][component] = true;
+      this.issues[domain][component].componentValue = value;
+      if (issue) {
+        console.log("recorded issue '" + issue + "'");
+        this.issues[domain][component].push(issue);
+      }
+    } else {
+      if (strength) {
+        console.log("recorded strength '" + strength + "'");
+        this.strengths[domain][component].push(strength);
+      }
     }
   }
 }
@@ -155,12 +266,12 @@ clientPrototype.scoreGeneralInformation = function() {
   this.scoring.generalInformation = 0;
 
   if (this.individual()) {
-    if (this.data.hoh1Age >= 60) {
+    if (this.data.hohAge >= 60) {
       console.log(this.data.id, "Scoring >= 60", "generalInformation")
       this.scoring.generalInformation++;
     }
   } else if (this.family()) {
-    if (this.data.hoh1Age >= 60 || this.data.hoh2Age >= 60) {
+    if (this.data.hohAge >= 60 || this.data.hoh2Age >= 60) {
       console.log(this.data.id, "Scoring >= 60", "generalInformation")
       this.scoring.generalInformation++;
     }
@@ -184,11 +295,16 @@ clientPrototype.scoreHistoryOfHousingAndHomelessness = function() {
   this.scoring.historyOfHousingAndHomelessness = 0;
 
   var years = this.data.hLength.split("years");
-  if (years.length === 2) {
-    this.scoreTotalGte(years[0], 2, "historyOfHousingAndHomelessness", "historyOfHousingAndHomelessness");
+  if (years.length > 1) {
+    years = years[0];
+  } else {
+    years = 0;
   }
+  this.scoreTotalGte(years, 2, "historyOfHousingAndHomelessness", "historyOfHousingAndHomelessness",
+    "Homeless less than 2 years", "Homeless 2 or more years");
 
-  this.scoreTotalGte(this.data.hTimes, 4, "historyOfHousingAndHomelessness", "historyOfHousingAndHomelessness");
+  this.scoreTotalGte(this.data.hTimes, 4, "historyOfHousingAndHomelessness", "historyOfHousingAndHomelessness",
+    "Less than 4 episodes of homelessness", "4 or more episodes of homelessness");
 }
 
 clientPrototype.scoreRisks = function() {
@@ -196,102 +312,162 @@ clientPrototype.scoreRisks = function() {
 
   this.scoreTotalGte([this.data.rEmergencyServicesER, this.data.rEmergencyServicesPolice,
     this.data.rEmergencyServicesAmbulance, this.data.rEmergencyServicesCrisisService,
-    this.data.rEmergencyServicesHospitalized], 4, "risks", "interactionsWithEmergencyServices");
+    this.data.rEmergencyServicesHospitalized], 4, "risks", "interactionsWithEmergencyServices",
+    "Less than 4 emergency interactions in the last six months",
+    "4 or more emergency interactions in the last six months");
 
-  this.scoreYes(this.data.rHarmAttacked, "risks", "harm");
-  this.scoreYes(this.data.rHarmAttempt, "risks", "harm");
+  this.scoreYes(this.data.rHarmAttacked, "risks", "harm",
+    "Not attacked since becoming homeless",
+    "Attacked since becoming homeless");
 
-  this.scoreYes(this.data.rLegalIssues, "risks", "legalIssues");
+  this.scoreYes(this.data.rHarmAttempt, "risks", "harm",
+    "No threats or attempts at harm in the past year",
+    "Threats or attempts at harm in the past year");
 
-  this.scoreYes(this.data.rHighRiskSituationsTricked, "risks", "involvementInHighRiskSituations");
-  this.scoreYes(this.data.rHighRiskSituationsRiskyActivites, "risks", "involvementInHighRiskSituations");
-  this.scoreValueOtherThan(this.data.rHighRiskSituationsSleepingPlace, "Shelter", "risks", "involvementInHighRiskSituations");
+  this.scoreYes(this.data.rLegalIssues, "risks", "legalIssues",
+    "No legal stuff going on",
+    "At risk of being locked up or having to pay fines");
+
+  this.scoreYes(this.data.rHighRiskSituationsTricked, "risks", "involvementInHighRiskSituations",
+    "No one forces them do things they do not want to do",
+    "People force them to do things they do not want to do");
+
+  this.scoreYes(this.data.rHighRiskSituationsRiskyActivites, "risks", "involvementInHighRiskSituations",
+    "Not engaging in risky activities", "Engaging in risky activities");
+
+  this.scoreValueOtherThan(this.data.rHighRiskSituationsSleepingPlace, "Shelter", "risks", "involvementInHighRiskSituations",
+    "Safe sleeping place", "Unsafe sleeping place");
 }
 
 clientPrototype.scoreSocialization = function() {
   this.scoring.socialization = 0;
 
-  this.scoreYes(this.data.sMoneyManagementStreetDebt, "socialization", "moneyManagement");
-  this.scoreNo(this.data.sMoneyManagementSteadyIncome, "socialization", "moneyManagement");
-  this.scoreNo(this.data.sMoneyManagementEnoughIncome, "socialization", "moneyManagement");
+  this.scoreYes(this.data.sMoneyManagementStreetDebt, "socialization", "moneyManagement",
+    "Nobody thinks they owe them money", "People think they owe them money");
 
-  this.scoreNo(this.data.sMeaningfulActivities, "socialization", "meaningfulActivities");
+  this.scoreNo(this.data.sMoneyManagementSteadyIncome, "socialization", "moneyManagement",
+    "Steady income", "No steady income");
 
-  this.scoreYes(this.data.sRelationshipsOutOfNecessityOnly, "socialization", "relationships");
-  this.scoreYes(this.data.sRelationshipsBadInfluences, "socialization", "relationships");
+  this.scoreNo(this.data.sMoneyManagementEnoughIncome, "socialization", "moneyManagement",
+    "Enough income to meet expenses", "Not enough income to meet expenses");
 
-  this.scoreYes(this.data.sSelfCarePoorHygieneObserved, "socialization", "selfCare");
+  this.scoreNo(this.data.sMeaningfulActivities, "socialization", "meaningfulActivities",
+    "Meaningful daily activities", "No meaningful daily activities");
+
+  this.scoreYes(this.data.sRelationshipsOutOfNecessityOnly, "socialization", "relationships",
+    "No relationships out of necessity", "Relationships out of necessity");
+  this.scoreYes(this.data.sRelationshipsBadInfluences, "socialization", "relationships",
+    "No bad influences", "Bad influences");
+
+  this.scoreYes(this.data.sSelfCarePoorHygieneObserved, "socialization", "selfCare",
+    "Good hygiene observed", "Poor hygiene observed");
 }
 
 clientPrototype.scoreWellness = function() {
   this.scoring.wellness = 0;
 
-  this.scoreValueEq(this.data.wPhysicalHealthPrimaryHealthcareDestination, "Does not go for care", "wellness", "physicalHealth");
+  this.scoreValueEq(this.data.wPhysicalHealthPrimaryHealthcareDestination, "Does not go for care", "wellness", "physicalHealth",
+    "Goes for medical care", "Does not go for medical care");
 
-  this.scoreYes(this.data.wPhysicalHealthMedicalKidneyDisease, "wellness", "physicalHealth", "medical", true);
-  this.scoreYes(this.data.wPhysicalHealthMedicalFrostBite, "wellness", "physicalHealth", "medical", true);
-  this.scoreYes(this.data.wPhysicalHealthMedicalLiverDisease, "wellness", "physicalHealth", "medical", true);
-  this.scoreYes(this.data.wPhysicalHealthMedicalHIV, "wellness", "physicalHealth", "medical", true);
+  this.scoreYes([this.data.wPhysicalHealthMedicalKidneyDisease,
+    this.data.wPhysicalHealthMedicalFrostBite,
+    this.data.wPhysicalHealthMedicalLiverDisease,
+    this.data.wPhysicalHealthMedicalHIV], "wellness", "physicalHealth",
+    "No VI medical conditions present", "VI Medical conditions present", "medical",
+    ["Kidney Disease", "Frostbite", "Liver Disease", "HIV+/AIDS" ], true);
 
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalHeatStroke, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalHeartDisease, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalLungDisease, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalDiabetes, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalAsthma, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalCancer, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalHepatitisC, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthOtherMedicalTuberculosis, "wellness", "physicalHealth", "otherMedical");
-  this.scoreYes(this.data.wPhysicalHealthSeriousHealthConditionObserved, "wellness", "physicalHealth", "otherMedical");
+  this.scoreYes([this.data.wPhysicalHealthOtherMedicalHeatStroke,
+    this.data.wPhysicalHealthOtherMedicalHeartDisease,
+    this.data.wPhysicalHealthOtherMedicalLungDisease,
+    this.data.wPhysicalHealthOtherMedicalDiabetes,
+    this.data.wPhysicalHealthOtherMedicalAsthma,
+    this.data.wPhysicalHealthOtherMedicalCancer,
+    this.data.wPhysicalHealthOtherMedicalHepatitisC,
+    this.data.wPhysicalHealthOtherMedicalTuberculosis,
+    ], "wellness", "physicalHealth",
+    "No other medical conditions present", "Other medical conditions present", "otherMedical",
+    ["Heat Exhaustion", "Heart Disease", "Lung Disease", "Diabetes", "Asthma", "Cancer", "Hepatitis C", "Tuberculosis"], false, true);
 
-  this.scoreYes(this.data.wSubstanceUseAbuse, "wellness", "substanceUse");
-  this.scoreYes(this.data.wSubstanceUseHighConsumption, "wellness", "substanceUse");
-  this.scoreYes(this.data.wSubstanceUseInjectionDrugUse, "wellness", "substanceUse");
-  this.scoreYes(this.data.wSubstanceUseRelapse, "wellness", "substanceUse");
-  this.scoreYes(this.data.wSubstanceUsePassedOut, "wellness", "substanceUse");
+  this.scoreYes(this.data.wPhysicalHealthSeriousHealthConditionObserved, "wellness", "physicalHealth",
+    "No serious health condition observed", "Serious health condition observed", "otherMedical", false, true);
+
+  this.scoreYes(this.data.wSubstanceUseAbuse, "wellness", "substanceUse",
+    "Clean", "Substance abuse");
+  this.scoreYes(this.data.wSubstanceUseHighConsumption, "wellness", "substanceUse",
+    "Lower consumption levels", "Daily consumption levels");
+  this.scoreYes(this.data.wSubstanceUseInjectionDrugUse, "wellness", "substanceUse",
+    "No injection drugs", "Injection drugs");
+  this.scoreYes(this.data.wSubstanceUseRelapse, "wellness", "substanceUse",
+    "Never relapsed", "Has relapsed");
+  this.scoreYes(this.data.wSubstanceUseNonBeverageAlcohol, "wellness", "substanceUse",
+    "No non-beverage alchohol", "Non-beverage alcohol");
+  this.scoreYes(this.data.wSubstanceUsePassedOut, "wellness", "substanceUse",
+    "Never passed out", "Has passed out");
   if (this.family()) {
-    this.scoreYes(this.data.wFSubstanceUseChildAbusing, "wellness", "substanceUse");
+    this.scoreYes(this.data.wFSubstanceUseChildAbusing, "wellness", "substanceUse",
+      "Minors not abusing", "Minors abusing");
   }
-  this.scoreYes(this.data.wSubstanceUseAbuseObserved, "wellness", "substanceUse");
+  this.scoreYes(this.data.wSubstanceUseAbuseObserved, "wellness", "substanceUse",
+    "No substance use problem observed", "Substance use problem observed");
 
-  this.scoreYes(this.data.wMentalHealthInvoluntaryCommittment, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthER, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthSeenProfessional, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthCognitiveHeadTrauma, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthCognitiveLearningDisability, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthCognitiveMemoryProblems, "wellness", "mentalHealth");
-  this.scoreYes(this.data.wMentalHealthSeriousMentalHealthIssueObserved, "wellness", "mentalHealth");
+  this.scoreYes(this.data.wMentalHealthInvoluntaryCommittment, "wellness", "mentalHealth",
+    "Never committed involuntarily", "Committed involuntarily");
+  this.scoreYes(this.data.wMentalHealthER, "wellness", "mentalHealth",
+    "Never taken to the ER for nerves", "Taken to the ER for nerves");
+  this.scoreYes(this.data.wMentalHealthSeenProfessional, "wellness", "mentalHealth",
+    "Never spoken to a mental professional", "Spoken with a mental health professional");
+  this.scoreYes(this.data.wMentalHealthCognitiveHeadTrauma, "wellness", "mentalHealth",
+    "No head trauma", "Head trauma");
+  this.scoreYes(this.data.wMentalHealthCognitiveLearningDisability, "wellness", "mentalHealth",
+    "No learning disability", "Learning disability");
+  this.scoreYes(this.data.wMentalHealthCognitiveMemoryProblems, "wellness", "mentalHealth",
+    "No problems concentrating", "Problems concentrating");
+  this.scoreYes(this.data.wMentalHealthSeriousMentalHealthIssueObserved, "wellness", "mentalHealth",
+    "No severe mental illness observed", "Severe mental llness observed");
 
+  console.log("medical", this.issuesPresent.wellness.medical, this.issuesPresent.wellness.otherMedical);
   if ((this.issuesPresent.wellness.medical || this.issuesPresent.wellness.otherMedical) &&
       this.issuesPresent.wellness.substanceUse &&
       this.issuesPresent.wellness.mentalHealth) {
     if (this.individual()) {
       this.scoring.wellness++;
       this.issuesPresent.wellness.trimorbidity = true;
+      console.log("increment score wellness on dimension trimorbidity");
     } else if (this.family()) {
       this.scoreYes(this.data.wFMentalHealthTriMorbidSameFamilyMember, "wellness", "trimorbidity");
     }
   }
 
-  this.scoreYes(this.data.wMedicationsMisuse, "wellness", "medication");
+  this.scoreYes(this.data.wMedicationsMisuse, "wellness", "medication",
+    "Follows prescription protocol", "Does not follow prescription protocol");
 
-  this.scoreYes(this.data.wAbuseOrTraumaYesOrNo, "wellness", "abuseOrTrauma");
+  this.scoreYes(this.data.wAbuseOrTraumaYesOrNo, "wellness", "abuseOrTrauma",
+    "No abuse or trauma reported", "Abuse or trauma reported");
 }
 
 clientPrototype.scoreFamilyUnit = function() {
   if (this.family()) {
     this.scoring.familyUnit = 0;
 
-    this.scoreYes(this.data.fParentalEngagementChildrenUnsupervised, "familyUnit", "parentalEngagement");
-    this.scoreYes(this.data.fParentalEngagementExcessiveDelegation, "familyUnit", "parentalEngagement");
+    this.scoreYes(this.data.fParentalEngagementChildrenUnsupervised, "familyUnit", "parentalEngagement",
+      "Children supervised", "Children left supervised");
+    this.scoreYes(this.data.fParentalEngagementExcessiveDelegation, "familyUnit", "parentalEngagement",
+      "Parental responsibility", "Excessive delegation of parental responsibility");
 
-    this.scoreTotalGte(this.data.fStabilityTimesAdultsChanged, 3, "familyUnit", "stability");
-    this.scoreTotalGte(this.data.fStabilityTimesSeparated, 3, "familyUnit", "stability");
+    this.scoreTotalGte(this.data.fStabilityTimesAdultsChanged, 3, "familyUnit", "stability",
+      "Adults changed 3 or more times in the past year", "Adults changed less than 3 times in the past year");
+    this.scoreTotalGte(this.data.fStabilityTimesSeparated, 3, "familyUnit", "stability",
+      "Children separated 3 or more times in the past year", "Children separated less than 3 times in the past year");
 
-    this.scoreYes(this.data.fNeedsOfChildrenMissingSchool, "familyUnit", "needsOfChildren");
-    this.scoreYes(this.data.fNeedsOfChildrenLivingElsewhere, "familyUnit", "needsOfChildren");
+    this.scoreYes(this.data.fNeedsOfChildrenMissingSchool, "familyUnit", "needsOfChildren",
+      "Children attending school", "Children missing school");
+    this.scoreYes(this.data.fNeedsOfChildrenLivingElsewhere, "familyUnit", "needsOfChildren",
+      "Children in household for last six months", "Children living with a friend in the last six months");
 
-    this.scoreYes(this.data.fInteractionsWithDCFAny, "familyUnit", "interactionsWithDCF");
-    this.scoreYes(this.data.fInteractionsWithDCFFamilyCourt, "familyUnit", "interactionsWithDCF");
+    this.scoreYes(this.data.fInteractionsWithDCFAny, "familyUnit", "interactionsWithDCF",
+      "No DCF interactions in last six months", "DCF interactions in last six months");
+    this.scoreYes(this.data.fInteractionsWithDCFFamilyCourt, "familyUnit", "interactionsWithDCF",
+      "No family court involvement in the last six months", "Family court involvement in the last six months");
   }
 }
 
@@ -375,6 +551,7 @@ request('http://localhost:8000/prescreens.csv', function(error, response, body) 
     }
 
     var outputCsv = baby.unparse(output);
+    console.log(client);
     console.log(outputCsv);
 
   }
